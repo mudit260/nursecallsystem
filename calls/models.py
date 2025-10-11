@@ -15,7 +15,7 @@ class Hospital(models.Model):
 
 class Room(models.Model):
     room_no = models.CharField(max_length=10)
-    floor_no = models.IntegerField()
+    floor_no = models.IntegerField(null=True, blank=True)
     hospital = models.ForeignKey(Hospital, on_delete=models.CASCADE, related_name="rooms")
     acknowledged = models.BooleanField(default=False)
     created_at = models.DateTimeField(auto_now_add=True)
