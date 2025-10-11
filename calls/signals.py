@@ -13,9 +13,9 @@ def call_created_handler(sender, instance, created, **kwargs):
     if created:
         data = {
             "call_id": instance.id,
-            "room_no": instance.room.room_no,
+            "room_no": instance.patient.room_number,
             "hospital_name": instance.room.hospital.name if instance.room.hospital else None,
-            "city": instance.room.hospital.city if instance.room.hospital else None,
+            #"city": instance.room.hospital.city if instance.room.hospital else None,
             "floor_no": instance.room.floor_no,
             "call_from": instance.call_from,
             "created_at": instance.created_at.isoformat(),
