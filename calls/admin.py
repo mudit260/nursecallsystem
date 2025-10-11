@@ -5,8 +5,8 @@ from .models import Hospital, Room, Call
 @admin.register(Hospital)
 class HospitalAdmin(admin.ModelAdmin):
     """Admin panel for Hospital"""
-    list_display = ("id", "name", "city", "created_at")
-    search_fields = ("name", "city")
+    list_display = ("id", "name", "created_at")
+    search_fields = ("name")
     ordering = ("name",)
 
 
@@ -29,7 +29,6 @@ class CallAdmin(admin.ModelAdmin):
         "id",
         "room_no",
         "hospital_name",
-        "city",
         "floor_no",
         "call_from",
         "created_at",
@@ -40,9 +39,9 @@ class CallAdmin(admin.ModelAdmin):
     )
 
     # For filtering, use fields that exist on Call
-    list_filter = ("hospital_name", "city", "floor_no", "acknowledged_at", "attended_at")
+    list_filter = ("hospital_name", "floor_no", "acknowledged_at", "attended_at")
 
-    search_fields = ("room_no", "hospital_name", "city", "floor_no", "call_from")
+    search_fields = ("room_no", "hospital_name", "floor_no", "call_from")
 
     def save_model(self, request, obj, form, change):
         obj.save()
