@@ -10,7 +10,7 @@ SECRET_KEY = os.getenv("DJANGO_SECRET_KEY", "test-secret-key")  # change for pro
 DEBUG = os.getenv("DEBUG", "True") == "True"
 
 ALLOWED_HOSTS = [
-    "https://nursecallsystem-71st.onrender.com",
+    "nursecallsystem-71st.onrender.com",
     "localhost",
     "127.0.0.1",
 ]
