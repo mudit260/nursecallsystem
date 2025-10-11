@@ -19,23 +19,34 @@ class RoomAdmin(admin.ModelAdmin):
     ordering = ("hospital", "floor_no", "room_no")
 
 
+from django.contrib import admin
+from .models import Call, Hospital
+
 @admin.register(Call)
 class CallAdmin(admin.ModelAdmin):
-    """Admin panel for Call"""
+    # Use actual fields on Call now
     list_display = (
         "id",
-        "room",
-        "get_hospital_name",
+        "room_no",
+        "hospital_name",
+        "city",
+        "floor_no",
         "call_from",
         "created_at",
         "acknowledged_at",
         "attended_at",
         "response_time_seconds",
-        "attend_delay_seconds"
+        "attend_delay_seconds",
     )
-    list_filter = ("room__hospital", "room__floor_no")
-    search_fields = ("room__room_no", "room__hospital__name", "call_from")
-    ordering = ("-created_at",)
+
+    # For filtering, use fields that exist on Call
+    list_filter = ("hospital_name", "city", "floor_no", "acknowledged_at", "attended_at")
+
+    search_fields = ("room_no", "hospital_name", "city", "floor_no", "call_from")
+
+    def save_model(self, request, obj, form, change):
+        obj.save()
+
 
     def get_hospital_name(self, obj):
         """Show hospital name in Call list"""
