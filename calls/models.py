@@ -14,7 +14,7 @@ class Hospital(models.Model):
 
 
 class Room(models.Model):
-    room_no = models.CharField(max_length=10)
+    room_no = models.CharField(max_length=10,null=True, blank=True)
     floor_no = models.IntegerField(null=True, blank=True)
     hospital = models.ForeignKey(Hospital, on_delete=models.CASCADE, related_name="rooms",null=True, blank=True)
     acknowledged = models.BooleanField(default=False)
@@ -44,7 +44,7 @@ class Room(models.Model):
 
 
 class Call(models.Model):
-    room_no = models.CharField(max_length=10)
+    room_no = models.CharField(max_length=10,null=True, blank=True)
     floor_no = models.IntegerField(null=True, blank=True) 
     hospital_name = models.CharField(max_length=100,null=True, blank=True)
     #city = models.CharField(max_length=100)
