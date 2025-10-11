@@ -6,8 +6,8 @@ from .models import Hospital, Room, Call
 class HospitalAdmin(admin.ModelAdmin):
     """Admin panel for Hospital"""
     list_display = ("id", "name", "created_at")
-    search_fields = ("name")
-    ordering = ("name",)
+    search_fields = ("name",)
+    
 
 
 @admin.register(Room)
