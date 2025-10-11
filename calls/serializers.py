@@ -5,7 +5,7 @@ from .models import Hospital, Room, Call
 class HospitalSerializer(serializers.ModelSerializer):
     class Meta:
         model = Hospital
-        fields = ["id", "name", "city"]
+        fields = ["id", "name"]
 
 class RoomSerializer(serializers.ModelSerializer):
     hospital_name = serializers.CharField(source="hospital.name", read_only=True)
