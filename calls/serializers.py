@@ -13,7 +13,7 @@ class RoomSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Room
-        fields = ["id", "room_no", "floor_no", "hospital", "hospital_name", "hospital_city", "acknowledged", "created_at"]
+        fields = ["id", "room_no", "floor_no", "hospital", "hospital_name", "acknowledged", "created_at"]
 
 
 class CallSerializer(serializers.ModelSerializer):
@@ -24,7 +24,7 @@ class CallSerializer(serializers.ModelSerializer):
             "room_no",
             "floor_no",
             "hospital_name",
-            "city",
+            #"city",
             "call_from",
             "created_at",
             "acknowledged_at",
