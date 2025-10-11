@@ -216,17 +216,15 @@ def call_events(request):
     calls = Call.objects.select_related("room").all()
 
     if hospital:
-        calls = calls.filter(room__hospital__iexact=hospital)
-        logger.info(f"Filtering calls by hospital={hospital}")
+        calls = calls.filter(hospital_name__iexact=hospital)
     if floor_no:
         try:
             floor_int = int(floor_no)
-            calls = calls.filter(room__floor_no=floor_int)
-            logger.info(f"Filtering calls by floor_no={floor_int}")
+            calls = calls.filter(floor_no=floor_int)
         except ValueError:
             logger.warning(f"Invalid floor_no value: {floor_no}")
     if room_no:
-        calls = calls.filter(room__room_no=room_no)
+        calls = calls.filter(room_no=room_no)
         logger.info(f"Filtering calls by room_no={room_no}")
 
     serializer = CallSerializer(calls, many=True)
