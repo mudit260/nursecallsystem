@@ -1,0 +1,10 @@
+Django>=5.0
+djangorestframework
+celery
+django-celery-beat
+django-celery-results
+redis
+gunicorn
+psycopg2-binary
+channels>=4.0
+requests
