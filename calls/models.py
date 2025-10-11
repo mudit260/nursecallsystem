@@ -47,7 +47,7 @@ class Call(models.Model):
     room_no = models.CharField(max_length=10)
     floor_no = models.IntegerField()
     hospital_name = models.CharField(max_length=100)
-    city = models.CharField(max_length=100)
+    #city = models.CharField(max_length=100)
     call_from = models.CharField(max_length=50)
     created_at = models.DateTimeField(default=timezone.now)
 
