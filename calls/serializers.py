@@ -9,7 +9,7 @@ class HospitalSerializer(serializers.ModelSerializer):
 
 class RoomSerializer(serializers.ModelSerializer):
     hospital_name = serializers.CharField(source="hospital.name", read_only=True)
-    hospital_city = serializers.CharField(source="hospital.city", read_only=True)
+    #hospital_city = serializers.CharField(source="hospital.city", read_only=True)
 
     class Meta:
         model = Room
