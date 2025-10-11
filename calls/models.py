@@ -45,7 +45,7 @@ class Room(models.Model):
 
 class Call(models.Model):
     room_no = models.CharField(max_length=10)
-    floor_no = models.IntegerField()
+    floor_no = models.IntegerField(null=True, blank=True) 
     hospital_name = models.CharField(max_length=100)
     #city = models.CharField(max_length=100)
     call_from = models.CharField(max_length=50)
