@@ -6,8 +6,9 @@ import random
 class Hospital(models.Model):
     name = models.CharField(max_length=100, unique=True)
     #city = models.CharField(max_length=100, blank=True, null=True)  # optional
-    created_at = models.DateTimeField(auto_now_add=True)
     address = models.TextField()
+    created_at = models.DateTimeField(auto_now_add=True)
+    
     def __str__(self):
         return f"{self.name} ({self.city})" if self.city else self.name
 
