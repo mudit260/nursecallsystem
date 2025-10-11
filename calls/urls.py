@@ -9,7 +9,6 @@ urlpatterns = [
 
     # ---- Room Management ----
     path("rooms/", views.list_rooms, name="list_rooms"),
-    path("rooms/create-random/", views.create_random_rooms, name="create_random_rooms"),
     path("calls/unacknowledged/", views.unacknowledged_calls, name="unack_calls"),
 
     # ---- Webhook ----
