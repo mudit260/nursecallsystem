@@ -1,30 +1,32 @@
-# Sample API
+# Code API
 
 
-> **API Documentation** | Generated on 2026-03-02 14:31:25
+> **API Documentation** | Generated on 2026-03-09 11:38:39
 
 ---
 
-# Sample API Documentation
+# Code API Documentation
 
 ---
 
 ## 1. Overview
 
-* **API Name:** Sample API
-* **Purpose / Business Value:** Provides a simple endpoint to create Call records and immediately dispatch notification payloads (webhook/websocket) containing call metadata such as call_id, room_no and floor_no. Intended for systems that need to register a new call and notify downstream listeners in real time.
-* **Base URL:** `https://api.example.com`
+* **API Name:** Code API
+* **Purpose / Business Value:** Manage and track nurse/patient calls and related resources (rooms, hospitals). Provides endpoints to create calls, acknowledge and attend to calls, list unacknowledged calls, manage rooms and hospitals, and receive webhook notifications for call events.
+* **Base URL:** `None`
 * **API Version:** v1
 * **Supported Formats:** JSON
 * **Detected Frameworks:** Django REST Framework
 * **Total Endpoints:** 10
-* **Last Updated:** 2026-03-02 14:31:25
+* **Last Updated:** 2026-03-09 11:38:39
 
 ### Key Features
 
-* Create call records via POST /create_call
-* Input validation using Django REST Framework serializers
-* Emits a webhook/websocket payload after a successful create
+* Call lifecycle management (create, acknowledge, attend)
+* Unacknowledged call listing for dashboards/triage
+* Room and hospital creation and listing
+* Webhook receiver endpoint for external integrations/notifications
+* Server-side validation using Django REST Framework serializers
 
 ### Endpoint Distribution
 
@@ -38,21 +40,21 @@
 ## 2. Authentication & Authorization
 
 * **Authentication Type:** Token
-* **How to Obtain Credentials:** This codebase excerpt contains no authentication patterns. Endpoints appear to be unauthenticated in the provided code. If authentication is added, it would typically be configured in Django REST Framework settings (e.g., TokenAuthentication or JWT) and documented separately.
-* **How to Pass Credentials:** N/A
+* **How to Obtain Credentials:** No authentication patterns were detected in the provided code snippets. Endpoints appear to be implemented without auth checks. If authentication is required in your deployment, add DRF authentication classes (Token/JWT) and update this section accordingly.
+* **How to Pass Credentials:** None
 
 ### Authentication Endpoints
 
 * `POST /create_call` - Authentication
 * `POST /acknowledge_call` - Authentication
 * `POST /attend_call` - Authentication
-* `GET /unacknowledged_calls` - Authentication
 * `POST /create_room` - Authentication
+* `GET /list_rooms` - Authentication
 
 **Example Query Parameter:**
 
 ```
-?api_key=N/A
+?api_key=None
 ```
 
 ---
@@ -63,8 +65,9 @@ The following headers are commonly used across all endpoints:
 
 | Header | Required | Description |
 |:-------|:--------:|:------------|
-| Authorization | Optional | Not required by the provided endpoints. Present only if auth is later enabled. |
-| Content-Type | Yes | Must be application/json for request bodies. |
+| Authorization | Optional | Optional auth token header if your deployment adds auth (e.g., 'Authorization: Bearer <token>'). Not required in the provided code. |
+| Content-Type | Yes | Must be 'application/json' for endpoints that accept a JSON body (POST endpoints such as /create_call, /create_room, /create_hospital). |
+| Accept | Optional | Clients should accept 'application/json'. |
 
 ---
 
@@ -72,16 +75,18 @@ The following headers are commonly used across all endpoints:
 
 | Status Code | Meaning |
 |:-----------:|:--------|
-| 201 | Created - call resource successfully created |
-| 400 | Bad Request - input validation failed |
-| 500 | Internal Server Error - unexpected error (e.g., webhook delivery failure) |
+| 201 | Created (resource successfully created, e.g., POST /create_call) |
+| 200 | Success |
+| 400 | Bad Request (validation errors from serializers) |
+| 404 | Not Found (e.g. call/room/hospital not found; get_object_or_404 used) |
+| 500 | Internal Server Error |
 
 **Error Response Format:**
 
 ```json
 {
   "status": 400,
-  "message": "Short human-readable error message or field error map",
+  "message": "Human readable error message (e.g. 'This field is required.')",
   "data": null
 }
 ```
@@ -90,8 +95,10 @@ The following headers are commonly used across all endpoints:
 
 | Error Code | Description |
 |:----------:|:------------|
-| `VALIDATION_ERROR` | Input validation failed; serializer.errors will contain details keyed by field. |
-| `WEBHOOK_ERROR` | Post-save webhook or websocket notification failed; the call was created but notification delivery errored. |
+| `VALIDATION_ERROR` | Input validation failed (serializer.is_valid() returned False). Response includes field-level errors. |
+| `NOT_FOUND` | Requested resource does not exist (raised via get_object_or_404). |
+| `ALREADY_ACKNOWLEDGED` | Attempted to acknowledge a call that already has an acknowledged_at timestamp. |
+| `ALREADY_ATTENDED` | Attempted to mark a call as attended that already has an attended_at timestamp. |
 
 ---
 
@@ -110,7 +117,7 @@ The following headers are commonly used across all endpoints:
 
 🔔 **Webhook:** This endpoint receives webhook callbacks.
 
-**Description:** Primary Purpose: Acknowledge a nurse call by marking the Call record's acknowledged_at timestamp and computing response_time_seconds; returns the serialized Call.
+**Description:** Primary Purpose: Acknowledge an existing Call record so the system records when a nurse (or other staff) accepted the call; it sets acknowledged_at, computes response_time_seconds, persists the Call, and emits a websocket notification and a webhook.
 
 **Request Headers:**
 
@@ -125,8 +132,9 @@ The following headers are commonly used across all endpoints:
 ```json
 {
   "id": 123,
-  "acknowledged_at": "2026-03-02T14:12:30Z",
-  "response_time_seconds": 42
+  "created_at": "2026-03-09T10:15:00Z",
+  "acknowledged_at": "2026-03-09T10:17:30Z",
+  "response_time_seconds": 150
 }
 ```
 
@@ -134,7 +142,7 @@ The following headers are commonly used across all endpoints:
 
 **cURL:**
 ```bash
-curl -X POST 'https://api.example.com/acknowledge_call' \
+curl -X POST '/acknowledge_call' \
   -H 'Authorization: Token <token> YOUR_TOKEN'
 ```
 
@@ -142,7 +150,7 @@ curl -X POST 'https://api.example.com/acknowledge_call' \
 ```python
 import requests
 
-url = 'https://api.example.com/acknowledge_call'
+url = '/acknowledge_call'
 headers = {
     'Authorization': 'Token <token> YOUR_TOKEN',
 }
@@ -153,7 +161,7 @@ print(response.json())
 
 **JavaScript (fetch):**
 ```javascript
-const url = 'https://api.example.com/acknowledge_call';
+const url = '/acknowledge_call';
 const options = {
   method: 'POST',
   headers: {
@@ -185,7 +193,7 @@ fetch(url, options)
 
 🔔 **Webhook:** This endpoint receives webhook callbacks.
 
-**Description:** Primary purpose: mark a Call record as attended by setting its attended_at timestamp and computing attend_delay_seconds, then return the serialized Call.
+**Description:** Marks a Call record as attended by setting its attended_at timestamp and calculating attend_delay_seconds, then returns the serialized Call.
 
 **Request Headers:**
 
@@ -199,11 +207,9 @@ fetch(url, options)
 
 ```json
 {
-  "id": 456,
-  "created_at": "2026-03-02T10:00:00Z",
-  "acknowledged_at": "2026-03-02T10:05:00Z",
-  "attended_at": "2026-03-02T10:06:30Z",
-  "attend_delay_seconds": 90
+  "id": 42,
+  "attended_at": "2026-03-09T12:34:56Z",
+  "attend_delay_seconds": 120
 }
 ```
 
@@ -211,7 +217,7 @@ fetch(url, options)
 
 **cURL:**
 ```bash
-curl -X POST 'https://api.example.com/attend_call' \
+curl -X POST '/attend_call' \
   -H 'Authorization: Token <token> YOUR_TOKEN'
 ```
 
@@ -219,7 +225,7 @@ curl -X POST 'https://api.example.com/attend_call' \
 ```python
 import requests
 
-url = 'https://api.example.com/attend_call'
+url = '/attend_call'
 headers = {
     'Authorization': 'Token <token> YOUR_TOKEN',
 }
@@ -230,7 +236,7 @@ print(response.json())
 
 **JavaScript (fetch):**
 ```javascript
-const url = 'https://api.example.com/attend_call';
+const url = '/attend_call';
 const options = {
   method: 'POST',
   headers: {
@@ -262,7 +268,11 @@ fetch(url, options)
 
 🔔 **Webhook:** This endpoint receives webhook callbacks.
 
-**Description:** Returns all call events, optionally filtered by hospital, floor_no, or room_no, and is intended for listing call events used by dashboards, reporting, or monitoring.
+**Description:** Returns all call events with optional filtering by hospital, floor_no, or room_no.
+Query params (optional):
+  - hospital: string
+  - floor_no: int
+  - room_no: string
 
 **Request Headers:**
 
@@ -275,22 +285,23 @@ fetch(url, options)
 **Status Code:** `200 OK`
 
 ```json
-{
-  "inferred_call_events": [
-    {
-      "hospital_name": "Central Hospital (inferred)",
-      "floor_no": 2,
-      "room_no": "210A (inferred)"
-    }
-  ]
-}
+[
+  {
+    "id": 1,
+    "name": "Example call_events 1"
+  },
+  {
+    "id": 2,
+    "name": "Example call_events 2"
+  }
+]
 ```
 
 **Code Examples:**
 
 **cURL:**
 ```bash
-curl -X GET 'https://api.example.com/call_events' \
+curl -X GET '/call_events' \
   -H 'Authorization: Token <token> YOUR_TOKEN'
 ```
 
@@ -298,7 +309,7 @@ curl -X GET 'https://api.example.com/call_events' \
 ```python
 import requests
 
-url = 'https://api.example.com/call_events'
+url = '/call_events'
 headers = {
     'Authorization': 'Token <token> YOUR_TOKEN',
 }
@@ -309,7 +320,7 @@ print(response.json())
 
 **JavaScript (fetch):**
 ```javascript
-const url = 'https://api.example.com/call_events';
+const url = '/call_events';
 const options = {
   method: 'GET',
   headers: {
@@ -339,7 +350,7 @@ fetch(url, options)
 
 🔔 **Webhook:** This endpoint receives webhook callbacks.
 
-**Description:** Creates a new Call record and returns the created resource.
+**Description:** Creates a new call record (e.
 
 **Request Headers:**
 
@@ -353,13 +364,13 @@ fetch(url, options)
 
 ```json
 {
-  "id": 123,
+  "call_id": 12345,
   "room_no": "101",
-  "floor_no": "1",
+  "floor_no": 2,
   "hospital_name": "General Hospital",
-  "city": "Metropolis",
+  "city": "Springfield",
   "call_from": "nurse_station",
-  "created_at": "2026-03-02T14:30:00Z"
+  "created_at": "2025-03-09T12:34:56Z"
 }
 ```
 
@@ -367,7 +378,7 @@ fetch(url, options)
 
 **cURL:**
 ```bash
-curl -X POST 'https://api.example.com/create_call' \
+curl -X POST '/create_call' \
   -H 'Authorization: Token <token> YOUR_TOKEN'
 ```
 
@@ -375,7 +386,7 @@ curl -X POST 'https://api.example.com/create_call' \
 ```python
 import requests
 
-url = 'https://api.example.com/create_call'
+url = '/create_call'
 headers = {
     'Authorization': 'Token <token> YOUR_TOKEN',
 }
@@ -386,7 +397,7 @@ print(response.json())
 
 **JavaScript (fetch):**
 ```javascript
-const url = 'https://api.example.com/create_call';
+const url = '/create_call';
 const options = {
   method: 'POST',
   headers: {
@@ -414,7 +425,7 @@ fetch(url, options)
 **Method:** POST
 **Endpoint:** `/create_hospital`
 
-**Description:** Creates a new hospital record using the HospitalSerializer and returns the created hospital representation with HTTP 201 on success or HTTP 400 if validation fails.
+**Description:** Creates a new hospital record from the JSON body and returns the created hospital representation; it is intended for clients that need to add hospital entities to the system.
 
 **Request Headers:**
 
@@ -428,12 +439,12 @@ fetch(url, options)
 
 ```json
 {
-  "id": 123,
-  "name": "Central City Hospital",
-  "_inferred_fields": [
-    "id",
-    "name"
-  ]
+  "id (inferred)": 42,
+  "name (inferred)": "City General Hospital",
+  "address (inferred)": "123 Main St, Springfield",
+  "phone (inferred)": "+1-555-0100",
+  "email (inferred)": "contact@cityhospital.example",
+  "capacity (inferred)": 250
 }
 ```
 
@@ -441,7 +452,7 @@ fetch(url, options)
 
 **cURL:**
 ```bash
-curl -X POST 'https://api.example.com/create_hospital' \
+curl -X POST '/create_hospital' \
   -H 'Authorization: Token <token> YOUR_TOKEN'
 ```
 
@@ -449,7 +460,7 @@ curl -X POST 'https://api.example.com/create_hospital' \
 ```python
 import requests
 
-url = 'https://api.example.com/create_hospital'
+url = '/create_hospital'
 headers = {
     'Authorization': 'Token <token> YOUR_TOKEN',
 }
@@ -460,7 +471,7 @@ print(response.json())
 
 **JavaScript (fetch):**
 ```javascript
-const url = 'https://api.example.com/create_hospital';
+const url = '/create_hospital';
 const options = {
   method: 'POST',
   headers: {
@@ -488,7 +499,7 @@ fetch(url, options)
 **Method:** POST
 **Endpoint:** `/create_room`
 
-**Description:** Creates a new room tied to a specific hospital and floor.
+**Description:** Creates a Room record linking a room number to a specific hospital and floor.
 
 **Request Headers:**
 
@@ -512,7 +523,7 @@ fetch(url, options)
 
 **cURL:**
 ```bash
-curl -X POST 'https://api.example.com/create_room' \
+curl -X POST '/create_room' \
   -H 'Authorization: Token <token> YOUR_TOKEN'
 ```
 
@@ -520,7 +531,7 @@ curl -X POST 'https://api.example.com/create_room' \
 ```python
 import requests
 
-url = 'https://api.example.com/create_room'
+url = '/create_room'
 headers = {
     'Authorization': 'Token <token> YOUR_TOKEN',
 }
@@ -531,7 +542,7 @@ print(response.json())
 
 **JavaScript (fetch):**
 ```javascript
-const url = 'https://api.example.com/create_room';
+const url = '/create_room';
 const options = {
   method: 'POST',
   headers: {
@@ -561,8 +572,6 @@ fetch(url, options)
 
 🔄 **Idempotent:** This operation is idempotent - multiple identical requests have the same effect as a single request.
 
-**Description:** Returns a simple list of available hospitals.
-
 **Request Headers:**
 
 | Header | Required | Value |
@@ -604,7 +613,7 @@ fetch(url, options)
 
 **cURL:**
 ```bash
-curl -X GET 'https://api.example.com/list_hospitals' \
+curl -X GET '/list_hospitals' \
   -H 'Authorization: Token <token> YOUR_TOKEN'
 ```
 
@@ -612,7 +621,7 @@ curl -X GET 'https://api.example.com/list_hospitals' \
 ```python
 import requests
 
-url = 'https://api.example.com/list_hospitals'
+url = '/list_hospitals'
 headers = {
     'Authorization': 'Token <token> YOUR_TOKEN',
 }
@@ -623,7 +632,7 @@ print(response.json())
 
 **JavaScript (fetch):**
 ```javascript
-const url = 'https://api.example.com/list_hospitals';
+const url = '/list_hospitals';
 const options = {
   method: 'GET',
   headers: {
@@ -653,7 +662,7 @@ fetch(url, options)
 
 🔄 **Idempotent:** This operation is idempotent - multiple identical requests have the same effect as a single request.
 
-**Description:** Returns a list of all Room records (serialized with RoomSerializer) ordered by room_no.
+**Description:** Returns a list of all Room records ordered by room_no.
 
 **Request Headers:**
 
@@ -696,7 +705,7 @@ fetch(url, options)
 
 **cURL:**
 ```bash
-curl -X GET 'https://api.example.com/list_rooms' \
+curl -X GET '/list_rooms' \
   -H 'Authorization: Token <token> YOUR_TOKEN'
 ```
 
@@ -704,7 +713,7 @@ curl -X GET 'https://api.example.com/list_rooms' \
 ```python
 import requests
 
-url = 'https://api.example.com/list_rooms'
+url = '/list_rooms'
 headers = {
     'Authorization': 'Token <token> YOUR_TOKEN',
 }
@@ -715,7 +724,7 @@ print(response.json())
 
 **JavaScript (fetch):**
 ```javascript
-const url = 'https://api.example.com/list_rooms';
+const url = '/list_rooms';
 const options = {
   method: 'GET',
   headers: {
@@ -745,10 +754,6 @@ fetch(url, options)
 
 🔄 **Idempotent:** This operation is idempotent - multiple identical requests have the same effect as a single request.
 
-🔔 **Webhook:** This endpoint receives webhook callbacks.
-
-**Description:** Returns a list of call records that have not yet been acknowledged (acknowledged_at is null), ordered by creation time.
-
 **Request Headers:**
 
 | Header | Required | Value |
@@ -760,27 +765,23 @@ fetch(url, options)
 **Status Code:** `200 OK`
 
 ```json
-{
-  "calls": [
-    {
-      "id (inferred)": 123,
-      "created_at (inferred)": "2026-02-28T09:15:00Z",
-      "acknowledged_at (inferred)": null
-    },
-    {
-      "id (inferred)": 124,
-      "created_at (inferred)": "2026-02-28T09:20:30Z",
-      "acknowledged_at (inferred)": null
-    }
-  ]
-}
+[
+  {
+    "id": 1,
+    "name": "Example unacknowledged_calls 1"
+  },
+  {
+    "id": 2,
+    "name": "Example unacknowledged_calls 2"
+  }
+]
 ```
 
 **Code Examples:**
 
 **cURL:**
 ```bash
-curl -X GET 'https://api.example.com/unacknowledged_calls' \
+curl -X GET '/unacknowledged_calls' \
   -H 'Authorization: Token <token> YOUR_TOKEN'
 ```
 
@@ -788,7 +789,7 @@ curl -X GET 'https://api.example.com/unacknowledged_calls' \
 ```python
 import requests
 
-url = 'https://api.example.com/unacknowledged_calls'
+url = '/unacknowledged_calls'
 headers = {
     'Authorization': 'Token <token> YOUR_TOKEN',
 }
@@ -799,7 +800,7 @@ print(response.json())
 
 **JavaScript (fetch):**
 ```javascript
-const url = 'https://api.example.com/unacknowledged_calls';
+const url = '/unacknowledged_calls';
 const options = {
   method: 'GET',
   headers: {
@@ -829,7 +830,7 @@ fetch(url, options)
 
 🔔 **Webhook:** This endpoint receives webhook callbacks.
 
-**Description:** Primary Purpose: This endpoint receives webhook notifications (HTTP POST) from this or external services, logs the incoming payload, and acknowledges receipt with a 200 OK and a brief JSON confirmation.
+**Description:** Primary Purpose: Accepts incoming webhook notifications and acknowledges receipt.
 
 **Request Headers:**
 
@@ -852,7 +853,7 @@ fetch(url, options)
 
 **cURL:**
 ```bash
-curl -X POST 'https://api.example.com/webhook_receiver' \
+curl -X POST '/webhook_receiver' \
   -H 'Authorization: Token <token> YOUR_TOKEN'
 ```
 
@@ -860,7 +861,7 @@ curl -X POST 'https://api.example.com/webhook_receiver' \
 ```python
 import requests
 
-url = 'https://api.example.com/webhook_receiver'
+url = '/webhook_receiver'
 headers = {
     'Authorization': 'Token <token> YOUR_TOKEN',
 }
@@ -871,7 +872,7 @@ print(response.json())
 
 **JavaScript (fetch):**
 ```javascript
-const url = 'https://api.example.com/webhook_receiver';
+const url = '/webhook_receiver';
 const options = {
   method: 'POST',
   headers: {
@@ -891,11 +892,17 @@ fetch(url, options)
 
 ---
 
-## 6. Changelog
+## 6. Versioning Strategy
+
+* **Strategy:** None (no API versioning detected in provided code)
+
+---
+
+## 7. Changelog
 
 | Version | Date | Changes |
 |---------|------|---------|
-| 1.0.0 | 2026-03-02 | Initial release with Create Call endpoints, Acknowledge Call endpoints, Attend Call endpoints |
+| 1.0.0 | 2026-03-09 | Initial release with Create Call endpoints, Acknowledge Call endpoints, Attend Call endpoints |
 
 ---
 
