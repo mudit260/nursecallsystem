@@ -1,7 +1,7 @@
 # Code API
 
 
-> **API Documentation** | Generated on 2026-03-13 13:54:30
+> **API Documentation** | Generated on 2026-03-19 11:04:44
 
 ---
 
@@ -12,49 +12,44 @@
 ## 1. Overview
 
 * **API Name:** Code API
-* **Purpose / Business Value:** This API manages nurse/patient call lifecycle and facility resources. It allows creation of calls (with room/floor context), acknowledgement and attendance tracking (including timing metrics like response_time_seconds and attend_delay_seconds), listing of unacknowledged calls, management of rooms, receiving external webhooks, and listing hospitals. The implementation sends out webhooks/websocket notifications after call creation.
+* **Purpose / Business Value:** The Code API provides functionalities for managing calls and rooms in a healthcare setting, allowing users to create, acknowledge, attend calls, and manage hospital information.
 * **Base URL:** `None`
 * **API Version:** v1
 * **Supported Formats:** JSON
 * **Detected Frameworks:** Django REST Framework
 * **Total Endpoints:** 10
-* **Last Updated:** 2026-03-13 13:54:30
+* **Last Updated:** 2026-03-19 11:04:44
 
 ### Key Features
 
-* Create and manage patient/nurse calls (create_call, acknowledge_call, attend_call)
-* Track call lifecycle timings (created_at, acknowledged_at, attended_at, response_time_seconds, attend_delay_seconds)
-* List and filter calls (unacknowledged_calls) and resources (rooms, hospitals)
-* Room management (create_room, list_rooms)
-* Webhook receiver endpoint for external integrations (webhook_receiver)
+* Create and manage calls
+* Acknowledge and attend calls
+* Manage hospital and room information
+* Webhook integration for real-time updates
 
 ### Endpoint Distribution
 
 | Method | Count | Description |
 |--------|-------|-------------|
 | `GET` | 4 | Data retrieval |
-| `POST` | 6 | Resource creation, resource updates |
+| `POST` | 6 | Resource creation |
 
 ---
 
 ## 2. Authentication & Authorization
 
-* **Authentication Type:** Token
-* **How to Obtain Credentials:** No authentication patterns (JWT/Token/OAuth) were detected in the provided code snippets. If authentication is required in other parts of the codebase, provide auth details separately.
-* **How to Pass Credentials:** N/A
+* **Authentication Type:** JWT Token
+* **How to Obtain Credentials:** Users must authenticate via the login endpoint to receive a JWT token.
+* **How to Pass Credentials:** Header
 
 ### Authentication Endpoints
 
-* `POST /create_call` - Authentication
-* `POST /acknowledge_call` - Authentication
-* `POST /attend_call` - Authentication
-* `POST /create_room` - Authentication
-* `POST /webhook_receiver` - Authentication
+* `POST /auth/login` - User login to obtain JWT token
 
-**Example Query Parameter:**
+**Example Header:**
 
 ```
-?api_key=N/A
+Authorization: Bearer <token>
 ```
 
 ---
@@ -65,9 +60,8 @@ The following headers are commonly used across all endpoints:
 
 | Header | Required | Description |
 |:-------|:--------:|:------------|
-| Authorization | Optional | Bearer token or other credential if API is configured to require auth (none detected in provided snippets). |
-| Content-Type | Yes | Must be application/json for JSON request bodies. |
-| Accept | Optional | application/json (response format expected) |
+| Authorization | Yes | Auth token used for authentication |
+| Content-Type | Yes | application/json |
 
 ---
 
@@ -76,31 +70,17 @@ The following headers are commonly used across all endpoints:
 | Status Code | Meaning |
 |:-----------:|:--------|
 | 200 | Success |
-| 201 | Resource created |
-| 400 | Bad Request — validation failed (serializer.is_valid() failures) |
-| 401 | Unauthorized (if auth is enabled) |
-| 403 | Forbidden (if permissions enforced) |
-| 404 | Not Found (get_object_or_404 triggered) |
-| 500 | Internal Server Error |
+| 400 | Bad Request |
+| 401 | Unauthorized |
+| 404 | Not Found |
 
 **Error Response Format:**
 
 ```json
 {
-  "drf_validation": {
-    "field_errors_example": {
-      "room_no": [
-        "This field is required."
-      ]
-    }
-  },
-  "detail_format": {
-    "detail": "Human-readable error message (standard DRF error response)"
-  },
-  "custom": {
-    "error": "Error message",
-    "code": "ERROR_CODE"
-  }
+  "status": 400,
+  "message": "Error message",
+  "data": null
 }
 ```
 
@@ -108,10 +88,8 @@ The following headers are commonly used across all endpoints:
 
 | Error Code | Description |
 |:----------:|:------------|
-| `VALIDATION_ERROR` | Input validation failed (serializer errors). |
-| `NOT_FOUND` | Requested resource (e.g., Call, Room) does not exist. |
-| `CALL_ALREADY_ACKNOWLEDGED` | Attempted to acknowledge a call that already has acknowledged_at set. Endpoint logic checks acknowledged_at before updating. |
-| `CALL_ALREADY_ATTENDED` | Attempted to mark a call as attended when attended_at is already set. Endpoint logic checks attended_at before updating. |
+| `VALIDATION_ERROR` | Input validation failed |
+| `NOT_FOUND` | Requested resource not found |
 
 ---
 
@@ -128,11 +106,9 @@ The following headers are commonly used across all endpoints:
 **Method:** POST
 **Endpoint:** `/acknowledge_call`
 
-🔄 **Idempotent:** This operation is idempotent - multiple identical requests have the same effect as a single request.
-
 🔔 **Webhook:** This endpoint receives webhook callbacks.
 
-**Description:** Marks a Call record as acknowledged by setting acknowledged_at and computing response_time_seconds; used when a nurse (or other staff) confirms they have seen/responded to a call.
+**Description:** The /acknowledge_call endpoint is designed to allow a nurse to acknowledge a call identified by its unique ID (pk).
 
 **Request Headers:**
 
@@ -146,10 +122,9 @@ The following headers are commonly used across all endpoints:
 
 ```json
 {
-  "id (inferred)": 123,
-  "created_at (inferred)": "2026-03-13T09:00:00Z",
-  "acknowledged_at (inferred)": "2026-03-13T09:00:42Z",
-  "response_time_seconds (inferred)": 42
+  "id": 1,
+  "acknowledged_at": "2023-10-01T12:00:00Z",
+  "response_time_seconds": 30
 }
 ```
 
@@ -206,7 +181,7 @@ fetch(url, options)
 
 🔔 **Webhook:** This endpoint receives webhook callbacks.
 
-**Description:** Marks a specific call as attended by setting attended_at (and calculating attend_delay_seconds) and returns the call representation.
+**Description:** The /attend_call endpoint allows a nurse to mark a specific call as attended by providing the call's unique identifier (ID).
 
 **Request Headers:**
 
@@ -221,8 +196,8 @@ fetch(url, options)
 ```json
 {
   "id": 123,
-  "attended_at": "2024-03-01T14:22:35Z",
-  "attend_delay_seconds": 42
+  "attended_at": "2023-10-01T12:00:00Z",
+  "attend_delay_seconds": 30
 }
 ```
 
@@ -363,7 +338,7 @@ fetch(url, options)
 
 🔔 **Webhook:** This endpoint receives webhook callbacks.
 
-**Description:** Creates a new Call record from the provided data, persists it, and triggers outbound notifications (a webhook and a websocket event).
+**Description:** The POST /create_call endpoint is designed to create a new call record in the system.
 
 **Request Headers:**
 
@@ -377,13 +352,14 @@ fetch(url, options)
 
 ```json
 {
-  "id": 123,
+  "call_id": 1,
   "room_no": "101",
-  "floor_no": 1,
-  "hospital_name": "Central Hospital",
+  "floor_no": "1",
+  "hospital_name": "General Hospital",
   "city": "Metropolis",
-  "call_from": "nurse_station",
-  "created_at": "2026-03-13T14:22:00Z"
+  "call_from": "Patient",
+  "created_at": "2023-10-01T12:00:00Z",
+  "status": "New call received"
 }
 ```
 
@@ -438,7 +414,7 @@ fetch(url, options)
 **Method:** POST
 **Endpoint:** `/create_hospital`
 
-**Description:** Creates a new Hospital record using the HospitalSerializer and returns the created hospital representation with HTTP 201 on success.
+**Description:** The POST /create_hospital endpoint is designed to facilitate the creation of new hospital records in the system.
 
 **Request Headers:**
 
@@ -452,10 +428,10 @@ fetch(url, options)
 
 ```json
 {
-  "id (inferred)": 1,
-  "name (inferred)": "Central City Hospital",
-  "address (inferred)": "123 Main St, Suite 100",
-  "phone (inferred)": "+1-555-0100"
+  "id": 1,
+  "name": "General Hospital",
+  "location": "123 Main St, Anytown, USA",
+  "capacity": 200
 }
 ```
 
@@ -510,7 +486,7 @@ fetch(url, options)
 **Method:** POST
 **Endpoint:** `/create_room`
 
-**Description:** Creates a new room record associated with a hospital and floor.
+**Description:** The /create_room endpoint is designed to create a new room within a specified hospital and floor.
 
 **Request Headers:**
 
@@ -583,7 +559,7 @@ fetch(url, options)
 
 🔄 **Idempotent:** This operation is idempotent - multiple identical requests have the same effect as a single request.
 
-**Description:** Primary Purpose: Returns a list of hospitals available in the system as a simple GET endpoint; intended for clients that need to display or select hospitals.
+**Description:** The /list_hospitals endpoint retrieves a list of hospitals available in the system.
 
 **Request Headers:**
 
@@ -674,6 +650,10 @@ fetch(url, options)
 **Endpoint:** `/list_rooms`
 
 🔄 **Idempotent:** This operation is idempotent - multiple identical requests have the same effect as a single request.
+
+🔔 **Webhook:** This endpoint receives webhook callbacks.
+
+**Description:** The /list_rooms endpoint retrieves a list of all available rooms in the system, ordered by their room number.
 
 **Request Headers:**
 
@@ -841,7 +821,7 @@ fetch(url, options)
 
 🔔 **Webhook:** This endpoint receives webhook callbacks.
 
-**Description:** Primary Purpose: This endpoint receives webhook notifications (an arbitrary JSON payload) and acknowledges receipt by returning a simple status.
+**Description:** The POST /webhook_receiver endpoint is designed to receive webhook notifications from various services.
 
 **Request Headers:**
 
@@ -903,17 +883,41 @@ fetch(url, options)
 
 ---
 
-## 6. Versioning Strategy
+## 6. Rate Limiting
 
-* **Strategy:** None detected
+**Rate Limiting:** Enabled
+
+* **User:** 100/minute
+
+### Rate Limit Headers
+
+| Header | Description |
+|--------|-------------|
+| `X-RateLimit-Limit` | Total allowed requests per minute |
+| `X-RateLimit-Remaining` | Requests remaining in the current window |
+
+### Retry Strategy
+
+When rate limited (429 status), wait for the time specified in `Retry-After` header.
 
 ---
 
-## 7. Changelog
+## 7. Versioning Strategy
+
+* **Strategy:** URL-based
+* **Current Version:** v1
+
+### Available Versions
+
+* `v1`
+
+---
+
+## 8. Changelog
 
 | Version | Date | Changes |
 |---------|------|---------|
-| 1.0.0 | 2026-03-13 | Initial release with Create Call endpoints, Acknowledge Call endpoints, Attend Call endpoints |
+| 1.0.0 | 2026-03-19 | Initial release with Create Call endpoints, Acknowledge Call endpoints, Attend Call endpoints |
 
 ---
 
