@@ -17,8 +17,8 @@
   "paths": {
     "/create_call": {
       "post": {
-        "summary": "Creates a new Call record from the provided data, persists it, and triggers outbound notifications (",
-        "description": "Creates a new Call record from the provided data, persists it, and triggers outbound notifications (a webhook and a websocket event). Typical use: clients (e.g., hospital devices or front‑end apps) call this endpoint to report a new call/event with room, floor and location details; on success the endpoint returns the created Call representation and emits notifications. Error scenarios include validation failures (400 Bad Request) when required/invalid fields are supplied; the implementation may also raise internal errors (500) if downstream notification delivery fails, since those calls are performed synchronously and not explicitly error‑handled in the shown code. Performance/security notes: there is no pagination or caching for this single-object create, and no rate limiting shown; authentication and permission checks are not present in the snippet and should be enforced by DRF authentication/permission classes in the view (these requirements are inferred). (Fields in request/response were inferred from the function code: room_no, floor_no, hospital_name, city, call_from, id, created_at.)",
+        "summary": "The POST /create_call endpoint is designed to create a new call record in the system. This endpoint ",
+        "description": "The POST /create_call endpoint is designed to create a new call record in the system. This endpoint is primarily used in scenarios where a new call needs to be logged, such as when a patient requests assistance in a hospital setting. Common error scenarios include invalid data submissions, which will result in a 400 Bad Request response if the provided data does not conform to the expected schema. There are no evident performance considerations such as pagination or rate limiting in the provided code. Security requirements are not explicitly mentioned, but it is advisable to implement authentication and authorization to ensure that only authorized users can create calls.",
         "operationId": "post_create_call",
         "tags": [
           "Django Rest Framework"
@@ -29,13 +29,14 @@
             "content": {
               "application/json": {
                 "example": {
-                  "id": 123,
+                  "call_id": 1,
                   "room_no": "101",
-                  "floor_no": 1,
-                  "hospital_name": "Central Hospital",
+                  "floor_no": "1",
+                  "hospital_name": "General Hospital",
                   "city": "Metropolis",
-                  "call_from": "nurse_station",
-                  "created_at": "2026-03-13T14:22:00Z"
+                  "call_from": "Patient",
+                  "created_at": "2023-10-01T12:00:00Z",
+                  "status": "New call received"
                 }
               }
             }
@@ -57,8 +58,8 @@
     },
     "/acknowledge_call": {
       "post": {
-        "summary": "Marks a Call record as acknowledged by setting acknowledged_at and computing response_time_seconds; ",
-        "description": "Marks a Call record as acknowledged by setting acknowledged_at and computing response_time_seconds; used when a nurse (or other staff) confirms they have seen/responded to a call. If the call is already acknowledged the endpoint is idempotent and returns the current Call representation; if not it updates the record, sends a websocket notification and a webhook. Common error cases include 404 Not Found when the call PK does not exist and 500 for unexpected server or database errors; validation errors are unlikely because the endpoint uses the URL PK and no request body. No pagination or caching is performed by this handler; note that websocket and webhook deliveries are additional I/O and may be subject to background processing or rate limits configured elsewhere. Authentication/authorization is not visible in this function and should be enforced by the surrounding DRF view/permissions (this security requirement is inferred). Note: example request/response fields below are inferred from the view code because explicit schemas were not provided.",
+        "summary": "The /acknowledge_call endpoint is designed to allow a nurse to acknowledge a call identified by its ",
+        "description": "The /acknowledge_call endpoint is designed to allow a nurse to acknowledge a call identified by its unique ID (pk). This is primarily used in healthcare settings where timely acknowledgment of calls is crucial for patient care. Common error scenarios include attempting to acknowledge a call that does not exist, which would result in a 404 Not Found error. Performance considerations are minimal as this endpoint does not involve pagination or rate limiting, but it does require proper authentication to ensure that only authorized personnel can acknowledge calls.",
         "operationId": "post_acknowledge_call",
         "tags": [
           "Django Rest Framework"
@@ -69,10 +70,9 @@
             "content": {
               "application/json": {
                 "example": {
-                  "id (inferred)": 123,
-                  "created_at (inferred)": "2026-03-13T09:00:00Z",
-                  "acknowledged_at (inferred)": "2026-03-13T09:00:42Z",
-                  "response_time_seconds (inferred)": 42
+                  "id": 1,
+                  "acknowledged_at": "2023-10-01T12:00:00Z",
+                  "response_time_seconds": 30
                 }
               }
             }
@@ -94,8 +94,8 @@
     },
     "/attend_call": {
       "post": {
-        "summary": "Marks a specific call as attended by setting attended_at (and calculating attend_delay_seconds) and ",
-        "description": "Marks a specific call as attended by setting attended_at (and calculating attend_delay_seconds) and returns the call representation. Use this endpoint when a nurse or staff member physically attends to a call to record the attendance time and delay; if the call is already attended it is returned unchanged. Error scenarios include the call not being found (404) and general server errors (500); note that the function may synchronously trigger WebSocket notifications and webhooks which can add latency. Security is not explicit in the code but, following typical DRF patterns, this action should require an authenticated and authorized user; request/response fields below are inferred from the implementation: request field 'pk' (path parameter) and response fields 'id', 'attended_at', and 'attend_delay_seconds'.",
+        "summary": "The /attend_call endpoint allows a nurse to mark a specific call as attended by providing the call's",
+        "description": "The /attend_call endpoint allows a nurse to mark a specific call as attended by providing the call's unique identifier (ID). This is primarily used in healthcare settings where timely response to calls is critical for patient care. Common error scenarios include attempting to attend a call that does not exist (resulting in a 404 error) or attempting to attend a call that has already been attended (though this is not explicitly handled in the code). Performance considerations are minimal as this endpoint does not involve pagination or rate limiting, but it does require proper authentication to ensure that only authorized personnel can attend calls.",
         "operationId": "post_attend_call",
         "tags": [
           "Django Rest Framework"
@@ -107,8 +107,8 @@
               "application/json": {
                 "example": {
                   "id": 123,
-                  "attended_at": "2024-03-01T14:22:35Z",
-                  "attend_delay_seconds": 42
+                  "attended_at": "2023-10-01T12:00:00Z",
+                  "attend_delay_seconds": 30
                 }
               }
             }
@@ -157,8 +157,8 @@
     },
     "/create_room": {
       "post": {
-        "summary": "Creates a new room record associated with a hospital and floor. Use this endpoint when adding rooms ",
-        "description": "Creates a new room record associated with a hospital and floor. Use this endpoint when adding rooms into the system (for example during setup or when expanding facility inventory). Common error scenarios: invalid or missing request fields will cause validation errors and return HTTP 400 with serializer errors; if the referenced hospital FK is invalid the serializer will typically return a validation error (HTTP 400); unexpected database or server errors may result in HTTP 500. Performance notes: this is a single-record create operation (no pagination) and the code does not implement rate limiting or caching — consider adding rate limiting for high-volume automated calls. Security: the function contains no explicit authentication/authorization checks in the shown code, so ensure you apply appropriate DRF permission classes or authentication in the surrounding view or viewset. Note: the response fields are not explicitly provided in the source; the example_response below is inferred to contain the same fields shown in the request (room_no, floor_no, hospital).",
+        "summary": "The /create_room endpoint is designed to create a new room within a specified hospital and floor. Th",
+        "description": "The /create_room endpoint is designed to create a new room within a specified hospital and floor. This endpoint is primarily used in healthcare applications where managing room allocations is crucial for operational efficiency. Common error scenarios include invalid data formats or missing required fields, which will result in a 400 Bad Request response. There are no evident performance considerations such as pagination or rate limiting in the provided code, and security measures such as authentication and authorization are typically required in healthcare applications to protect sensitive data.",
         "operationId": "post_create_room",
         "tags": [
           "Django Rest Framework"
@@ -193,8 +193,8 @@
     },
     "/list_rooms": {
       "get": {
-        "summary": "GET /list_rooms",
-        "description": "",
+        "summary": "The /list_rooms endpoint retrieves a list of all available rooms in the system, ordered by their roo",
+        "description": "The /list_rooms endpoint retrieves a list of all available rooms in the system, ordered by their room number. This endpoint is primarily used by clients who need to display room information, such as in a booking system or inventory management application. Common error scenarios include issues with database connectivity, which may lead to a 500 Internal Server Error, though specific error handling is not implemented in the provided code. Performance considerations include the potential for large datasets, which may necessitate pagination, although this endpoint currently does not implement pagination features. Security requirements are not explicitly defined in the provided code, but standard practices would suggest that access to this endpoint should be restricted to authenticated users to prevent unauthorized data exposure.",
         "operationId": "get_list_rooms",
         "tags": [
           "Django Rest Framework"
@@ -227,6 +227,12 @@
                       }
                     }
                   }
+                },
+                "example": {
+                  "count": 10,
+                  "next": null,
+                  "previous": null,
+                  "results": []
                 }
               }
             }
@@ -248,8 +254,8 @@
     },
     "/webhook_receiver": {
       "post": {
-        "summary": "Primary Purpose: This endpoint receives webhook notifications (an arbitrary JSON payload) and acknow",
-        "description": "Primary Purpose: This endpoint receives webhook notifications (an arbitrary JSON payload) and acknowledges receipt by returning a simple status. Business Context: Use it when external services or internal components need to POST event notifications to this application for processing, logging, or asynchronous handling; the function logs the incoming payload and immediately responds to the sender. Error Scenarios: The implementation always returns HTTP 200 on success but does not include explicit error handling; common error cases are malformed JSON (handled by DRF request parsing, typically resulting in a 400), unexpected exceptions during request processing (500), or rejection by global authentication/permission settings if such middleware is enabled. Performance & Security Notes: There is no built-in pagination, rate limiting, caching, or payload validation in the view (recommend applying rate limiting, signature verification, payload validation, and HTTPS in front of this endpoint); the request schema is not provided in source code, so the top-level field \"data\" used in the example_request below is inferred to represent the arbitrary webhook payload.",
+        "summary": "The POST /webhook_receiver endpoint is designed to receive webhook notifications from various servic",
+        "description": "The POST /webhook_receiver endpoint is designed to receive webhook notifications from various services. This endpoint is primarily used to handle incoming data from external systems, allowing the application to respond to events in real-time. Common error scenarios include malformed requests or unsupported data formats, which could lead to HTTP 400 responses. There are no specific performance considerations like pagination or rate limiting evident from the code. Security requirements are not explicitly defined in the provided code, but it is advisable to implement authentication mechanisms to ensure that only trusted sources can send webhook notifications.",
         "operationId": "post_webhook_receiver",
         "tags": [
           "Django Rest Framework"
@@ -282,8 +288,8 @@
     },
     "/list_hospitals": {
       "get": {
-        "summary": "Primary Purpose: Returns a list of hospitals available in the system as a simple GET endpoint; inten",
-        "description": "Primary Purpose: Returns a list of hospitals available in the system as a simple GET endpoint; intended for clients that need to display or select hospitals. Business Context: Use this endpoint when populating hospital lists in UI dropdowns or for lightweight service discovery; the implementation returns all hospitals in one response. Error Scenarios: There is no explicit error handling in the function, so clients should expect HTTP 200 on success and potential HTTP 500 for unhandled server errors; invalid HTTP methods will be rejected by the framework. Performance & Security Notes: The current implementation does not implement pagination, rate limiting, caching, or authentication (inferred from code), so for large datasets or production use add pagination, caching, rate limits and enforce authentication/authorization as appropriate.",
+        "summary": "The /list_hospitals endpoint retrieves a list of hospitals available in the system. This endpoint is",
+        "description": "The /list_hospitals endpoint retrieves a list of hospitals available in the system. This endpoint is primarily used to display hospital options to users, such as patients seeking medical care or administrative staff managing hospital data. Common error scenarios include potential issues with network connectivity or server errors, which may result in HTTP 500 responses. There are no evident pagination or rate limiting considerations in the current implementation, but it is advisable to consider these for larger datasets. Security requirements are not explicitly defined in the provided code, but typically, access to such endpoints may require user authentication and authorization to ensure that sensitive health information is protected.",
         "operationId": "get_list_hospitals",
         "tags": [
           "Django Rest Framework"
@@ -319,12 +325,18 @@
                 },
                 "example": {
                   "count": 3,
-                  "next": "",
-                  "previous": "",
+                  "next": null,
+                  "previous": null,
                   "results": [
-                    "Fortis",
-                    "Apollo",
-                    "City Hospital"
+                    {
+                      "name": "Fortis"
+                    },
+                    {
+                      "name": "Apollo"
+                    },
+                    {
+                      "name": "City Hospital"
+                    }
                   ]
                 }
               }
@@ -347,8 +359,8 @@
     },
     "/create_hospital": {
       "post": {
-        "summary": "Creates a new Hospital record using the HospitalSerializer and returns the created hospital represen",
-        "description": "Creates a new Hospital record using the HospitalSerializer and returns the created hospital representation with HTTP 201 on success. This endpoint is intended for use by administrative clients or backend services that need to add hospital entries to the system (e.g., onboarding a new facility). Common error scenarios include serializer validation failures (missing or invalid fields) which return HTTP 400 with details in the response, and unexpected server errors which would surface as HTTP 500; authentication/authorization behavior is not shown in the code and may result in 401/403 depending on the surrounding view configuration. There is no evidence of pagination, rate limiting, or caching in the implementation — these should be applied at the framework or infrastructure level if required. Note: request/response fields in the examples below are inferred from the serializer usage because explicit schemas were not provided (inferred fields are marked).",
+        "summary": "The POST /create_hospital endpoint is designed to facilitate the creation of new hospital records in",
+        "description": "The POST /create_hospital endpoint is designed to facilitate the creation of new hospital records in the system. This endpoint is primarily used when a new hospital needs to be registered, allowing users to submit the necessary data in a structured format. Common error scenarios include validation failures when the submitted data does not conform to the expected schema, resulting in a 400 Bad Request response. There are no evident performance considerations such as pagination or rate limiting in the provided code, and security requirements are not specified, but typically, authentication and authorization mechanisms should be implemented to protect this endpoint.",
         "operationId": "post_create_hospital",
         "tags": [
           "Django Rest Framework"
@@ -359,10 +371,10 @@
             "content": {
               "application/json": {
                 "example": {
-                  "id (inferred)": 1,
-                  "name (inferred)": "Central City Hospital",
-                  "address (inferred)": "123 Main St, Suite 100",
-                  "phone (inferred)": "+1-555-0100"
+                  "id": 1,
+                  "name": "General Hospital",
+                  "location": "123 Main St, Anytown, USA",
+                  "capacity": 200
                 }
               }
             }
