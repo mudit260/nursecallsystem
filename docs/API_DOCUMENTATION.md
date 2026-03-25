@@ -1,7 +1,7 @@
 # Code API
 
 
-> **API Documentation** | Generated on 2026-03-24 15:36:11
+> **API Documentation** | Generated on 2026-03-25 07:04:49
 
 ---
 
@@ -12,19 +12,19 @@
 ## 1. Overview
 
 * **API Name:** Code API
-* **Purpose / Business Value:** The Code API facilitates the management of calls and rooms in a healthcare environment, allowing for the creation, acknowledgment, and attendance of calls, as well as the management of hospitals and rooms.
+* **Purpose / Business Value:** The Code API facilitates the management of calls and rooms in a healthcare setting, allowing nurses to acknowledge and attend to calls, manage rooms, and handle hospital data.
 * **Base URL:** `None`
 * **API Version:** v1
 * **Supported Formats:** JSON
 * **Detected Frameworks:** Django, Django REST Framework
 * **Total Endpoints:** 21
-* **Last Updated:** 2026-03-24 15:36:11
+* **Last Updated:** 2026-03-25 07:04:49
 
 ### Key Features
 
 * Create and manage calls
 * Acknowledge and attend calls
-* Manage hospitals and rooms
+* Manage rooms and hospitals
 * Webhook support for real-time updates
 
 ### Endpoint Distribution
@@ -39,7 +39,7 @@
 ## 2. Authentication & Authorization
 
 * **Authentication Type:** JWT Token
-* **How to Obtain Credentials:** Users can obtain a JWT token by logging in through the authentication endpoint.
+* **How to Obtain Credentials:** Users must authenticate via the login endpoint to receive a JWT token.
 * **How to Pass Credentials:** Header
 
 ### Authentication Endpoints
@@ -60,8 +60,8 @@ The following headers are commonly used across all endpoints:
 
 | Header | Required | Description |
 |:-------|:--------:|:------------|
-| Authorization | Yes | Auth token for accessing protected endpoints |
-| Content-Type | Yes | Specifies the media type of the resource, typically application/json |
+| Authorization | Yes | Auth token |
+| Content-Type | Yes | application/json |
 
 ---
 
@@ -70,15 +70,16 @@ The following headers are commonly used across all endpoints:
 | Status Code | Meaning |
 |:-----------:|:--------|
 | 200 | Success |
-| 400 | Bad Request - Input validation failed or incorrect data format. |
-| 401 | Unauthorized - Authentication credentials are missing or invalid. |
+| 400 | Bad Request |
+| 401 | Unauthorized |
+| 404 | Not Found |
 
 **Error Response Format:**
 
 ```json
 {
   "status": 400,
-  "message": "Error message detailing the issue",
+  "message": "Error message",
   "data": null
 }
 ```
@@ -87,8 +88,8 @@ The following headers are commonly used across all endpoints:
 
 | Error Code | Description |
 |:----------:|:------------|
-| `VALIDATION_ERROR` | Input validation failed due to incorrect or missing data. |
-| `NOT_FOUND` | Requested resource was not found. |
+| `VALIDATION_ERROR` | Input validation failed |
+| `NOT_FOUND` | Requested resource not found |
 
 ---
 
@@ -107,7 +108,7 @@ The following headers are commonly used across all endpoints:
 
 🔔 **Webhook:** This endpoint receives webhook callbacks.
 
-**Description:** The /acknowledge_call endpoint is designed to allow a nurse to acknowledge a specific call identified by its primary key (pk).
+**Description:** The /acknowledge_call endpoint allows a nurse to acknowledge a call by its unique identifier (ID).
 
 **Request Headers:**
 
@@ -260,7 +261,7 @@ fetch(url, options)
 
 🔔 **Webhook:** This endpoint receives webhook callbacks.
 
-**Description:** The /attend_call endpoint allows a nurse to mark a specific call as attended by its ID (pk).
+**Description:** The /attend_call endpoint allows a nurse to mark a specific call as attended by providing the call's unique identifier (pk).
 
 **Request Headers:**
 
@@ -419,6 +420,8 @@ fetch(url, options)
 
 🔄 **Idempotent:** This operation is idempotent - multiple identical requests have the same effect as a single request.
 
+🔔 **Webhook:** This endpoint receives webhook callbacks.
+
 **Description:** The GET /calls/unacknowledged endpoint retrieves a list of calls that have not yet been acknowledged.
 
 **Request Headers:**
@@ -432,16 +435,20 @@ fetch(url, options)
 **Status Code:** `200 OK`
 
 ```json
-[
-  {
-    "id": 1,
-    "name": "Example unacknowledged 1"
-  },
-  {
-    "id": 2,
-    "name": "Example unacknowledged 2"
-  }
-]
+{
+  "calls": [
+    {
+      "id": 1,
+      "caller_id": "1234567890",
+      "timestamp": "2023-10-01T12:00:00Z"
+    },
+    {
+      "id": 2,
+      "caller_id": "0987654321",
+      "timestamp": "2023-10-01T12:05:00Z"
+    }
+  ]
+}
 ```
 
 **Code Examples:**
@@ -496,7 +503,7 @@ fetch(url, options)
 
 🔔 **Webhook:** This endpoint receives webhook callbacks.
 
-**Description:** The GET /calls/events endpoint retrieves a list of call events, which can be used to monitor and manage call activities within the application.
+**Description:** The GET /calls/events endpoint retrieves a list of call events, which can be used to monitor call activities within the system.
 
 **Request Headers:**
 
@@ -509,16 +516,24 @@ fetch(url, options)
 **Status Code:** `200 OK`
 
 ```json
-[
-  {
-    "id": 1,
-    "name": "Example events 1"
-  },
-  {
-    "id": 2,
-    "name": "Example events 2"
-  }
-]
+{
+  "events": [
+    {
+      "id": 1,
+      "type": "incoming",
+      "timestamp": "2023-10-01T12:00:00Z",
+      "caller_id": "1234567890",
+      "status": "completed"
+    },
+    {
+      "id": 2,
+      "type": "outgoing",
+      "timestamp": "2023-10-01T12:05:00Z",
+      "caller_id": "0987654321",
+      "status": "missed"
+    }
+  ]
+}
 ```
 
 **Code Examples:**
@@ -570,7 +585,7 @@ fetch(url, options)
 **Method:** POST
 **Endpoint:** `/call`
 
-**Description:** The POST /call endpoint is designed to create a new call within the system, primarily used in scenarios where a user needs to initiate a communication session, such as a medical consultation or emergency response.
+**Description:** The POST /call endpoint is designed to create a new call within the application.
 
 **Request Headers:**
 
@@ -710,6 +725,8 @@ fetch(url, options)
 **Method:** POST
 **Endpoint:** `/call/<int:pk>/attend`
 
+🔔 **Webhook:** This endpoint receives webhook callbacks.
+
 **Description:** The POST /call/<int:pk>/attend endpoint is designed to allow users to attend a specific call identified by its primary key (pk).
 
 **Request Headers:**
@@ -785,7 +802,7 @@ fetch(url, options)
 
 🔔 **Webhook:** This endpoint receives webhook callbacks.
 
-**Description:** The /create_call endpoint is designed to facilitate the creation of a new call record within the system.
+**Description:** The /create_call endpoint allows clients to create a new call entry in the system.
 
 **Request Headers:**
 
@@ -858,7 +875,7 @@ fetch(url, options)
 **Method:** POST
 **Endpoint:** `/create_hospital`
 
-**Description:** The POST /create_hospital endpoint is designed to create a new hospital record in the system.
+**Description:** The /create_hospital endpoint is designed to facilitate the creation of new hospital records within the system.
 
 **Request Headers:**
 
@@ -931,6 +948,8 @@ fetch(url, options)
 **Method:** POST
 **Endpoint:** `/create_room`
 
+🔔 **Webhook:** This endpoint receives webhook callbacks.
+
 **Description:** The /create_room endpoint is designed to facilitate the creation of a new room within a specified hospital and floor.
 
 **Request Headers:**
@@ -945,7 +964,8 @@ fetch(url, options)
 
 ```json
 {
-  "type": "object"
+  "type": "object",
+  "properties": {}
 }
 ```
 
@@ -1002,7 +1022,7 @@ fetch(url, options)
 
 🔄 **Idempotent:** This operation is idempotent - multiple identical requests have the same effect as a single request.
 
-**Description:** The GET /hospitals endpoint retrieves a list of hospitals from the system, serving as a crucial resource for users needing information about available healthcare facilities.
+**Description:** The /hospitals GET endpoint retrieves a list of hospitals from the system, providing essential information for users who need to access hospital data, such as healthcare professionals or administrative staff.
 
 **Request Headers:**
 
@@ -1090,6 +1110,8 @@ fetch(url, options)
 **Method:** POST
 **Endpoint:** `/hospitals/create`
 
+🔔 **Webhook:** This endpoint receives webhook callbacks.
+
 **Description:** The POST /hospitals/create endpoint is designed to facilitate the creation of new hospital records within the system.
 
 **Request Headers:**
@@ -1161,7 +1183,7 @@ fetch(url, options)
 
 🔄 **Idempotent:** This operation is idempotent - multiple identical requests have the same effect as a single request.
 
-**Description:** The /list_hospitals endpoint retrieves a list of hospitals available in the system.
+**Description:** The /list_hospitals endpoint retrieves a list of hospitals, providing a simple way to access hospital data for applications that require healthcare facilities information.
 
 **Request Headers:**
 
@@ -1253,7 +1275,7 @@ fetch(url, options)
 
 🔄 **Idempotent:** This operation is idempotent - multiple identical requests have the same effect as a single request.
 
-**Description:** The /list_rooms endpoint retrieves a list of all rooms in the system, ordered by their room number.
+**Description:** The /list_rooms endpoint retrieves a list of all available rooms in the system, ordered by their room number.
 
 **Request Headers:**
 
@@ -1345,7 +1367,7 @@ fetch(url, options)
 
 🔄 **Idempotent:** This operation is idempotent - multiple identical requests have the same effect as a single request.
 
-**Description:** The GET /rooms endpoint retrieves a list of rooms available in the system.
+**Description:** The GET /rooms endpoint retrieves a list of rooms available in the system, primarily used for displaying room information to users or other systems.
 
 **Request Headers:**
 
@@ -1661,7 +1683,7 @@ fetch(url, options)
 
 🔔 **Webhook:** This endpoint receives webhook callbacks.
 
-**Description:** The POST /webhook endpoint is designed to receive webhook notifications from external services, allowing the application to process events in real-time.
+**Description:** The POST /webhook endpoint is designed to receive webhook notifications from external services, allowing the application to handle events in real-time.
 
 **Request Headers:**
 
@@ -1675,8 +1697,11 @@ fetch(url, options)
 
 ```json
 {
-  "type": "object",
-  "properties": {}
+  "type": {
+    "id": 1,
+    "name": "Sample type"
+  },
+  "properties": "sample_properties"
 }
 ```
 
@@ -1733,9 +1758,7 @@ fetch(url, options)
 
 | Header | Description |
 |--------|-------------|
-| `X-RateLimit-Limit` | Total number of requests allowed per minute |
-| `X-RateLimit-Remaining` | Number of requests remaining in the current rate limit window |
-| `X-RateLimit-Reset` | Time when the rate limit will reset |
+| `X-RateLimit-Limit` | Total allowed requests per minute |
 
 ### Retry Strategy
 
@@ -1758,7 +1781,7 @@ When rate limited (429 status), wait for the time specified in `Retry-After` hea
 
 | Version | Date | Changes |
 |---------|------|---------|
-| 1.0.0 | 2026-03-24 | Initial release with Call endpoints, Calls endpoints, Rooms endpoints |
+| 1.0.0 | 2026-03-25 | Initial release with Call endpoints, Calls endpoints, Rooms endpoints |
 
 ---
 
