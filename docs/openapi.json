@@ -17,8 +17,8 @@
   "paths": {
     "/call": {
       "post": {
-        "summary": "The POST /call endpoint is designed to create a new call within the application. This endpoint is pr",
-        "description": "The POST /call endpoint is designed to create a new call within the application. This endpoint is primarily used in scenarios where a new call needs to be initiated, such as in a hospital or emergency response context. Common error scenarios may include invalid data submissions or unauthorized access, which could result in HTTP 400 or 403 responses. Performance considerations are not explicitly defined, but standard practices such as rate limiting and caching may apply based on the overall application design. Security requirements typically involve ensuring that the user is authenticated and authorized to create calls.",
+        "summary": "The POST /call endpoint is designed to create a new call within the system. This endpoint is primari",
+        "description": "The POST /call endpoint is designed to create a new call within the system. This endpoint is primarily used in scenarios where a user needs to initiate a call, such as in a hospital or emergency response context. Common error scenarios may include invalid input data or unauthorized access attempts. Performance considerations are not explicitly mentioned, but typical best practices for API calls, such as rate limiting and caching, should be applied. Security requirements typically involve user authentication to ensure that only authorized personnel can create calls.",
         "operationId": "post_call",
         "tags": [
           "Django"
@@ -41,11 +41,8 @@
                   "required": []
                 },
                 "example": {
-                  "type": {
-                    "id": 1,
-                    "name": "Sample type"
-                  },
-                  "properties": "sample_properties"
+                  "type": "object",
+                  "properties": {}
                 }
               }
             }
@@ -68,7 +65,7 @@
     "/call/<int:pk>/ack": {
       "post": {
         "summary": "The POST /call/<int:pk>/ack endpoint is designed to acknowledge a specific call identified by its pr",
-        "description": "The POST /call/<int:pk>/ack endpoint is designed to acknowledge a specific call identified by its primary key (pk). This endpoint is primarily used in scenarios where a user or system needs to confirm that a call has been received and is being addressed. Common error scenarios may include attempts to acknowledge a call that does not exist, which could return a 404 error, or issues with user permissions that may result in a 403 error. There are no specific performance considerations such as pagination or rate limiting evident from the code. Security requirements typically involve ensuring that the user is authenticated and authorized to acknowledge the call, which is a common practice in Django applications.",
+        "description": "The POST /call/<int:pk>/ack endpoint is designed to acknowledge a specific call identified by its primary key (pk). This is particularly useful in scenarios where a call needs to be marked as acknowledged by a user or system, ensuring that it is recognized and can be tracked accordingly. Common error scenarios may include attempts to acknowledge a call that does not exist, which would typically result in a 404 Not Found error. Performance considerations are minimal for this endpoint, as it is a direct acknowledgment action without pagination or rate limiting. Security requirements likely include authentication to ensure that only authorized users can acknowledge calls.",
         "operationId": "post_call_int_pk_ack",
         "tags": [
           "Django"
@@ -117,8 +114,8 @@
     },
     "/call/<int:pk>/attend": {
       "post": {
-        "summary": "The POST /call/<int:pk>/attend endpoint is designed to allow users to attend a specific call identif",
-        "description": "The POST /call/<int:pk>/attend endpoint is designed to allow users to attend a specific call identified by its primary key (pk). This endpoint is primarily used in scenarios where a user needs to acknowledge their participation in a call, facilitating better call management within the application. Common error scenarios may include attempting to attend a call that does not exist or lacks the necessary permissions to attend. Performance considerations are not explicitly mentioned, but it is advisable to implement rate limiting to prevent abuse of the endpoint. Security requirements typically include user authentication and authorization to ensure that only permitted users can attend calls.",
+        "summary": "The POST /call/<int:pk>/attend endpoint allows users to mark a specific call as attended by providin",
+        "description": "The POST /call/<int:pk>/attend endpoint allows users to mark a specific call as attended by providing the call's primary key (pk). This endpoint is primarily used in scenarios where users need to acknowledge their participation in a call, facilitating better management and tracking of call attendance. Common error scenarios may include attempting to attend a call that does not exist or lacks the necessary permissions, which could result in HTTP 404 or 403 errors respectively. Performance considerations are not explicitly defined in the provided code, but typical Django practices apply, including potential caching of frequently accessed data. Security requirements are implied, as this endpoint likely requires user authentication to ensure that only authorized users can mark calls as attended.",
         "operationId": "post_call_int_pk_attend",
         "tags": [
           "Django"
@@ -168,7 +165,7 @@
     "/calls/unacknowledged": {
       "get": {
         "summary": "The GET /calls/unacknowledged endpoint retrieves a list of calls that have not yet been acknowledged",
-        "description": "The GET /calls/unacknowledged endpoint retrieves a list of calls that have not yet been acknowledged. This endpoint is primarily used by support staff or system administrators to monitor unacknowledged calls, ensuring timely responses to incoming requests. Common error scenarios may include unauthorized access if proper authentication is not provided. Performance considerations include potential rate limiting to prevent abuse, although specific pagination or caching strategies are not evident from the provided code. Security requirements likely include user authentication to ensure that only authorized personnel can access the unacknowledged calls data.",
+        "description": "The GET /calls/unacknowledged endpoint retrieves a list of calls that have not yet been acknowledged. This is particularly useful for call management systems where operators need to identify and address unacknowledged calls promptly. Common error scenarios may include unauthorized access if proper authentication is not provided. Performance considerations are not explicitly mentioned, but it is advisable to implement pagination for large datasets. Security requirements include ensuring that only authorized users can access this endpoint, typically through token-based authentication.",
         "operationId": "get_calls_unacknowledged",
         "tags": [
           "Django"
@@ -182,12 +179,12 @@
                   "calls": [
                     {
                       "id": 1,
-                      "caller_id": "1234567890",
+                      "caller": "John Doe",
                       "timestamp": "2023-10-01T12:00:00Z"
                     },
                     {
                       "id": 2,
-                      "caller_id": "0987654321",
+                      "caller": "Jane Smith",
                       "timestamp": "2023-10-01T12:05:00Z"
                     }
                   ]
@@ -212,8 +209,8 @@
     },
     "/calls/events": {
       "get": {
-        "summary": "The GET /calls/events endpoint retrieves a list of call events, which can be used to monitor call ac",
-        "description": "The GET /calls/events endpoint retrieves a list of call events, which can be used to monitor call activities within the system. This endpoint is particularly useful for applications that need to display real-time call event data to users or for analytics purposes. Common error scenarios include unauthorized access attempts and server errors, which may occur if the user does not have the necessary permissions or if the server encounters an issue while processing the request. Performance considerations include potential rate limiting and caching strategies to optimize the retrieval of call events, especially in high-traffic scenarios. Security requirements typically involve user authentication to ensure that only authorized users can access call event data.",
+        "summary": "The GET /calls/events endpoint retrieves a list of call events, allowing users to monitor and manage",
+        "description": "The GET /calls/events endpoint retrieves a list of call events, allowing users to monitor and manage call activities within the application. This endpoint is particularly useful for administrators or support staff who need to track call events for auditing or operational purposes. Common error scenarios may include unauthorized access attempts, which would return a 403 Forbidden status, or not found errors if the endpoint is misconfigured. Performance considerations include potential pagination if the number of call events is large, although this is not explicitly indicated in the provided code. Security requirements typically involve authentication to ensure that only authorized users can access call event data.",
         "operationId": "get_calls_events",
         "tags": [
           "Django"
@@ -226,18 +223,18 @@
                 "example": {
                   "events": [
                     {
-                      "id": 1,
-                      "type": "incoming",
+                      "event_id": 1,
+                      "call_id": 101,
                       "timestamp": "2023-10-01T12:00:00Z",
-                      "caller_id": "1234567890",
-                      "status": "completed"
+                      "event_type": "started",
+                      "details": "Call started successfully."
                     },
                     {
-                      "id": 2,
-                      "type": "outgoing",
+                      "event_id": 2,
+                      "call_id": 102,
                       "timestamp": "2023-10-01T12:05:00Z",
-                      "caller_id": "0987654321",
-                      "status": "missed"
+                      "event_type": "ended",
+                      "details": "Call ended by user."
                     }
                   ]
                 }
@@ -262,7 +259,7 @@
     "/rooms": {
       "get": {
         "summary": "The GET /rooms endpoint retrieves a list of rooms available in the system, primarily used for displa",
-        "description": "The GET /rooms endpoint retrieves a list of rooms available in the system, primarily used for displaying room information to users or other systems. This endpoint is essential for applications that need to present room options for scheduling or resource allocation. Common error scenarios may include unauthorized access, which would return a 403 Forbidden status, though specific error handling is not detailed in the provided code. Performance considerations include potential pagination, as the re",
+        "description": "The GET /rooms endpoint retrieves a list of rooms available in the system, primarily used for displaying room information to users or other services. This endpoint is crucial for applications that need to manage or allocate rooms, such as in a hospital or event management context. Common error scenarios may include issues related to authorization if the user lacks the necessary permissions to view room data. Performance considerations include potential pagination if the number of rooms is large,",
         "operationId": "get_rooms",
         "tags": [
           "Django"
@@ -325,7 +322,7 @@
     "/rooms/create": {
       "post": {
         "summary": "The POST /rooms/create endpoint is designed to facilitate the creation of new rooms within the appli",
-        "description": "The POST /rooms/create endpoint is designed to facilitate the creation of new rooms within the application. This endpoint is primarily used in scenarios where a user or system needs to dynamically create rooms for various purposes, such as meetings, events, or other gatherings. Common error scenarios may include attempts to create a room with invalid or missing data, which could lead to HTTP 400 Bad Request responses. Performance considerations are minimal for this endpoint, as it does not involve pagination or rate limiting; however, it is advisable to implement proper authentication and authorization to ensure that only authorized users can create rooms.",
+        "description": "The POST /rooms/create endpoint is designed to facilitate the creation of new rooms within the application. This endpoint is primarily used when a user needs to set up a new room for various purposes, such as meetings or events. Common error scenarios may include validation errors if required fields are missing or if the user lacks the necessary permissions to create a room. Performance considerations are minimal as this endpoint does not involve pagination or rate limiting, but it is crucial to ensure that proper authentication and authorization mechanisms are in place to secure room creation against unauthorized access.",
         "operationId": "post_rooms_create",
         "tags": [
           "Django"
@@ -374,8 +371,8 @@
     },
     "/webhook": {
       "post": {
-        "summary": "The POST /webhook endpoint is designed to receive webhook notifications from external services, allo",
-        "description": "The POST /webhook endpoint is designed to receive webhook notifications from external services, allowing the application to handle events in real-time. This endpoint is particularly useful for integrating with third-party systems that send event data, such as call status updates or room availability changes. Common error scenarios may include invalid payloads or network issues, which could result in unsuccessful requests. Performance considerations are not explicitly defined in the provided code, but it is advisable to implement rate limiting to prevent abuse. Security measures should include authentication to ensure that only authorized services can send data to this endpoint.",
+        "summary": "The POST /webhook endpoint is designed to receive webhook notifications from external services. This",
+        "description": "The POST /webhook endpoint is designed to receive webhook notifications from external services. This endpoint is primarily used to handle asynchronous events, such as call updates or status changes, allowing the application to react to these events in real-time. Common error scenarios may include invalid payload formats or unauthorized access attempts, which should be handled gracefully. Performance considerations include ensuring that the endpoint can handle a high volume of incoming requests without significant delays, and security measures should be in place to authenticate incoming requests to prevent unauthorized access.",
         "operationId": "post_webhook",
         "tags": [
           "Django"
@@ -424,8 +421,8 @@
     },
     "/hospitals": {
       "get": {
-        "summary": "The /hospitals GET endpoint retrieves a list of hospitals from the system, providing essential infor",
-        "description": "The /hospitals GET endpoint retrieves a list of hospitals from the system, providing essential information for users who need to access hospital data, such as healthcare professionals or administrative staff. This endpoint is particularly useful for applications that require a comprehensive view of available hospitals for patient referrals or resource allocation. Common error scenarios may include unauthorized access attempts or issues with data retrieval, though specific error handling is not d",
+        "summary": "The GET /hospitals endpoint is designed to retrieve a list of hospitals from the system, providing e",
+        "description": "The GET /hospitals endpoint is designed to retrieve a list of hospitals from the system, providing essential information for users needing to access healthcare facilities. This endpoint is particularly useful for applications that require displaying available hospitals to users, such as in healthcare management systems or emergency response applications. Common error scenarios may include issues like unauthorized access or server errors, which could prevent successful data retrieval. Performance",
         "operationId": "get_hospitals",
         "tags": [
           "Django"
@@ -488,7 +485,7 @@
     "/hospitals/create": {
       "post": {
         "summary": "The POST /hospitals/create endpoint is designed to facilitate the creation of new hospital records w",
-        "description": "The POST /hospitals/create endpoint is designed to facilitate the creation of new hospital records within the system. This endpoint is primarily used when an administrator or authorized user needs to register a new hospital, ensuring that all relevant data is captured and stored. Common error scenarios may include validation errors if required fields are missing or improperly formatted, as well as authorization errors if the user lacks the necessary permissions to create a hospital. Performance considerations are not explicitly defined in the provided code, but standard practices for API rate limiting and caching should be applied. Security requirements typically involve ensuring that only authenticated and authorized users can access this endpoint to prevent unauthorized hospital registrations.",
+        "description": "The POST /hospitals/create endpoint is designed to facilitate the creation of new hospital records within the system. This endpoint is primarily used by administrators or authorized personnel to add hospitals to the database, which is essential for managing healthcare resources effectively. Common error scenarios may include validation errors if required fields are missing or if the provided data does not meet the expected format. Performance considerations are not explicitly defined in the code, but typical API practices such as rate limiting and caching may apply. Security requirements typically involve ensuring that only authenticated and authorized users can access this endpoint to prevent unauthorized hospital creation.",
         "operationId": "post_hospitals_create",
         "tags": [
           "Django"
@@ -511,7 +508,8 @@
                   "required": []
                 },
                 "example": {
-                  "type": "object"
+                  "type": "object",
+                  "properties": {}
                 }
               }
             }
@@ -533,8 +531,8 @@
     },
     "/admin": {
       "get": {
-        "summary": "The GET /admin endpoint serves as the administrative interface for managing the Django application. ",
-        "description": "The GET /admin endpoint serves as the administrative interface for managing the Django application. It is primarily used by administrators to access various management features, such as user management, content administration, and site configuration. Common error scenarios may include unauthorized access attempts, which would typically return a 403 Forbidden status. Performance considerations are minimal for this endpoint, as it does not involve pagination or rate limiting; however, caching may be utilized to enhance load times for frequently accessed admin pages. Security is paramount, and this endpoint requires proper authentication and authorization to ensure that only users with admin privileges can access it.",
+        "summary": "The GET /admin endpoint provides access to the Django admin interface, which is primarily used for m",
+        "description": "The GET /admin endpoint provides access to the Django admin interface, which is primarily used for managing application data and user permissions. This endpoint is typically utilized by administrators to perform CRUD operations on models registered in the admin site. Common error scenarios may include unauthorized access attempts, which would result in HTTP 403 Forbidden responses. Performance considerations are minimal for this endpoint, as it does not involve pagination or rate limiting; however, caching strategies may be employed to enhance load times for frequently accessed admin pages. Security requirements include proper authentication and authorization, as only users with admin privileges can access this endpoint.",
         "operationId": "get_admin",
         "tags": [
           "Django"
@@ -560,8 +558,8 @@
     },
     "/create_call": {
       "post": {
-        "summary": "The /create_call endpoint allows clients to create a new call entry in the system. This is primarily",
-        "description": "The /create_call endpoint allows clients to create a new call entry in the system. This is primarily used in healthcare applications where calls for assistance need to be logged and tracked. The endpoint validates the incoming data and, upon successful creation of a call, sends notifications via webhook and WebSocket. Common error scenarios include invalid data formats or missing required fields, which will result in a 400 Bad Request response. There are no pagination or rate limiting considerations evident from the code, and security requirements such as authentication and authorization should be implemented as per the application's needs.",
+        "summary": "The /create_call endpoint is designed to facilitate the creation of a new call record in the system.",
+        "description": "The /create_call endpoint is designed to facilitate the creation of a new call record in the system. This endpoint is primarily used in scenarios where a new call needs to be logged, such as in a hospital or emergency service context. Common error scenarios include validation failures when the provided data does not meet the requirements defined in the CallSerializer, resulting in a 400 Bad Request response. Performance considerations are minimal as there are no pagination or rate limiting mechanisms evident in the code. Security requirements are not explicitly defined in the provided code, but standard practices would suggest implementing authentication and authorization to ensure that only authorized users can create call records.",
         "operationId": "post_create_call",
         "tags": [
           "Django Rest Framework"
@@ -611,7 +609,7 @@
     "/acknowledge_call": {
       "post": {
         "summary": "The /acknowledge_call endpoint allows a nurse to acknowledge a call by its unique identifier (ID). T",
-        "description": "The /acknowledge_call endpoint allows a nurse to acknowledge a call by its unique identifier (ID). This is primarily used in healthcare settings where timely responses to calls are critical. Upon acknowledgment, the call's response time is calculated and logged, and notifications are sent out to relevant systems. Common error scenarios include attempting to acknowledge a call that does not exist, which would result in a 404 Not Found error. Security requirements for this endpoint typically involve ensuring that only authenticated and authorized personnel can acknowledge calls.",
+        "description": "The /acknowledge_call endpoint allows a nurse to acknowledge a call by its unique identifier (ID). This is primarily used in healthcare settings where timely response to calls is critical, enabling tracking of response times. If the call has already been acknowledged, the endpoint will not update the call's status. Common error scenarios include attempting to acknowledge a call that does not exist, which would result in a 404 Not Found error. There are no specific performance considerations such as pagination or rate limiting evident from the code, but standard security practices should be applied to ensure that only authorized personnel can access this endpoint.",
         "operationId": "post_acknowledge_call",
         "tags": [
           "Django Rest Framework"
@@ -660,8 +658,8 @@
     },
     "/attend_call": {
       "post": {
-        "summary": "The /attend_call endpoint allows a nurse to mark a specific call as attended by providing the call's",
-        "description": "The /attend_call endpoint allows a nurse to mark a specific call as attended by providing the call's unique identifier (pk). This is particularly useful in healthcare settings where timely responses to calls are critical for patient care. If the call has not been attended previously, the endpoint will log the attendance time and calculate any delays based on acknowledgment times. Common error scenarios include attempting to attend a call that does not exist, which will result in a 404 Not Found error. Security measures should ensure that only authorized personnel, such as nurses, can access this endpoint to prevent unauthorized call attendance.",
+        "summary": "The /attend_call endpoint allows a nurse to mark a call as attended by providing the unique identifi",
+        "description": "The /attend_call endpoint allows a nurse to mark a call as attended by providing the unique identifier (ID) of the call. This is primarily used in healthcare settings to track the response time of medical staff to incoming calls. Common error scenarios include attempts to attend a call that does not exist, which will result in a 404 Not Found error. Performance considerations are minimal for this endpoint, as it does not involve pagination or rate limiting. Security requirements include ensuring that only authorized personnel can access this endpoint, typically managed through authentication mechanisms provided by the Django REST Framework.",
         "operationId": "post_attend_call",
         "tags": [
           "Django Rest Framework"
@@ -684,11 +682,7 @@
                   "required": []
                 },
                 "example": {
-                  "type": {
-                    "id": 1,
-                    "name": "Sample type"
-                  },
-                  "properties": "sample_properties"
+                  "type": "object"
                 }
               }
             }
@@ -738,7 +732,7 @@
     "/create_room": {
       "post": {
         "summary": "The /create_room endpoint is designed to facilitate the creation of a new room within a specified ho",
-        "description": "The /create_room endpoint is designed to facilitate the creation of a new room within a specified hospital and floor. This is particularly useful in healthcare management systems where room allocation is essential for patient care and hospital operations. Common error scenarios include invalid input data, such as missing required fields or incorrect data types, which would result in a 400 Bad Request response. There are no explicit performance considerations such as pagination or rate limiting evident from the code, but it is important to ensure that the endpoint is secured to prevent unauthorized access, typically requiring authentication and proper authorization mechanisms.",
+        "description": "The /create_room endpoint is designed to facilitate the creation of a new room within a specified hospital and floor. This endpoint is particularly useful in healthcare applications where managing room allocations is critical for operational efficiency. Common error scenarios include invalid input data, which would result in a 400 Bad Request response if the provided room number, floor number, or hospital ID do not meet validation criteria. Performance considerations are minimal for this endpoint, as it does not involve pagination or caching; however, it should be protected against excessive requests through rate limiting. Security requirements include ensuring that only authenticated users with appropriate permissions can create rooms, as this operation modifies the state of the application.",
         "operationId": "post_create_room",
         "tags": [
           "Django Rest Framework"
@@ -761,8 +755,11 @@
                   "required": []
                 },
                 "example": {
-                  "type": "object",
-                  "properties": {}
+                  "type": {
+                    "id": 1,
+                    "name": "Sample type"
+                  },
+                  "properties": "sample_properties"
                 }
               }
             }
@@ -784,8 +781,8 @@
     },
     "/list_rooms": {
       "get": {
-        "summary": "The /list_rooms endpoint retrieves a list of all available rooms in the system, ordered by their roo",
-        "description": "The /list_rooms endpoint retrieves a list of all available rooms in the system, ordered by their room number. This endpoint is primarily used in scenarios where a client application needs to display a comprehensive list of rooms, such as in a hotel management system or a conference room booking application. Common error scenarios include issues with database connectivity, which may lead to a 500 Internal Server Error. Performance considerations include the potential for large datasets, although pagination is not explicitly implemented in this endpoint. Security requirements are not detailed in the provided code, but standard practices would suggest that authentication and authorization checks should be implemented to restrict access to this endpoint.",
+        "summary": "The /list_rooms endpoint retrieves a list of all rooms from the database, ordered by room number. Th",
+        "description": "The /list_rooms endpoint retrieves a list of all rooms from the database, ordered by room number. This endpoint is primarily used in applications where users need to view available rooms, such as in hotel management systems or event planning applications. Common error scenarios include potential database connection issues, though the current implementation does not explicitly handle exceptions. Performance considerations include the fact that the endpoint retrieves all rooms without pagination, which may lead to performance issues with a large dataset. Security requirements are not explicitly defined in the code, but it is advisable to implement authentication and authorization to restrict access to this endpoint.",
         "operationId": "get_list_rooms",
         "tags": [
           "Django Rest Framework"
@@ -845,8 +842,8 @@
     },
     "/webhook_receiver": {
       "post": {
-        "summary": "The /webhook_receiver endpoint is designed to receive webhook notifications from various services, a",
-        "description": "The /webhook_receiver endpoint is designed to receive webhook notifications from various services, allowing the application to process real-time updates or events. This endpoint is particularly useful for integrating with third-party services that send data asynchronously, such as payment gateways or messaging platforms. Common error scenarios may include malformed requests or unsupported content types, which could lead to HTTP 400 responses. Performance considerations are minimal for this endpoint, as it is intended for immediate processing of incoming webhooks without pagination or rate limiting. Security requirements are not explicitly defined in the provided code, but it is advisable to implement authentication mechanisms to verify the source of incoming webhook requests.",
+        "summary": "The POST /webhook_receiver endpoint is designed to receive webhook notifications from various servic",
+        "description": "The POST /webhook_receiver endpoint is designed to receive webhook notifications from various services. This endpoint is primarily used for integrating external systems that send event notifications, allowing the application to process incoming data in real-time. Common error scenarios include malformed requests or unsupported content types, which may result in a 400 Bad Request response. There are no specific performance considerations such as pagination or rate limiting evident from the provided code. Security requirements are not explicitly defined in the code, but it is recommended to implement authentication mechanisms to ensure that only authorized services can send webhooks.",
         "operationId": "post_webhook_receiver",
         "tags": [
           "Django Rest Framework"
@@ -895,8 +892,8 @@
     },
     "/list_hospitals": {
       "get": {
-        "summary": "The /list_hospitals endpoint retrieves a list of hospitals, providing a simple way to access hospita",
-        "description": "The /list_hospitals endpoint retrieves a list of hospitals, providing a simple way to access hospital data for applications that require healthcare facilities information. This endpoint is useful for users looking to display available hospitals in a specific area or for integration with healthcare-related services. Common error scenarios may include issues with data retrieval, though no specific error handling is implemented in the provided code. Performance considerations are minimal as the endpoint does not implement pagination or caching, and it returns a static list of hospitals. Security requirements are not specified in the code, suggesting that this endpoint may be publicly accessible without authentication.",
+        "summary": "The GET /list_hospitals endpoint retrieves a list of hospitals available in the system. This endpoin",
+        "description": "The GET /list_hospitals endpoint retrieves a list of hospitals available in the system. This endpoint is primarily used by clients needing to display or utilize hospital information for various purposes, such as patient referrals or healthcare service inquiries. Common error scenarios may include issues with data retrieval, but as the current implementation does not handle exceptions explicitly, errors are not anticipated. Performance considerations include the absence of pagination in the current implementation, which may affect response time with a larger dataset. There are no explicit security requirements noted in the code, suggesting that this endpoint may be publicly accessible, but it is advisable to implement authentication for sensitive data access.",
         "operationId": "get_list_hospitals",
         "tags": [
           "Django Rest Framework"
@@ -967,7 +964,7 @@
     "/create_hospital": {
       "post": {
         "summary": "The /create_hospital endpoint is designed to facilitate the creation of new hospital records within ",
-        "description": "The /create_hospital endpoint is designed to facilitate the creation of new hospital records within the system. This endpoint is primarily used by administrators or authorized personnel to add hospitals to the database, ensuring that the healthcare network is up to date. Common error scenarios include invalid data submissions, which will result in a 400 Bad Request response if the provided data does not meet the validation criteria defined in the HospitalSerializer. There are no evident performance considerations such as pagination or rate limiting from the provided code, and security measures such as authentication and authorization should be implemented to restrict access to this endpoint.",
+        "description": "The /create_hospital endpoint is designed to facilitate the creation of new hospital records within the system. This endpoint is primarily used when a new hospital needs to be registered, allowing healthcare providers to maintain an up-to-date database of available facilities. Common error scenarios include invalid data submissions, which will result in a 400 Bad Request response if the provided data does not conform to the expected schema. Performance considerations are not explicitly defined in the code, but standard practices such as rate limiting and caching should be applied to ensure optimal operation. Security measures, including authentication and authorization, should be implemented to restrict access to this endpoint to authorized users only.",
         "operationId": "post_create_hospital",
         "tags": [
           "Django Rest Framework"
